@@ -184,6 +184,7 @@ class TrajectorySegmentation:
 
     def segmentByLabel(self, label='transportation_mode'):
         df = self.row_data
+        df = df.sort_values(by=[label])
         t = df[label].values
         start = 0
         segments = []
