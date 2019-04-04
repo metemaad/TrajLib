@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
-
 import TrajectoryDescriptorFeature as tdf
+from TrajectoryFeatureExtractor import TrajectoryFeatureExtractor
 
 
 class TrajectoryDescriptor:
@@ -34,10 +34,14 @@ class TrajectoryDescriptor:
 
     def describe(self):
         trajectory_descriptor_feature = tdf.TrajectoryDescriptorFeature()
+        tfe = TrajectoryFeatureExtractor(self.row_data)
+        stops = tfe.get_stop_times()
+        stops_rate = 0 if len(stops) == 1 and stops[0] == 0 else len(stops)
 
         td = trajectory_descriptor_feature.describe(self.row_data.td)
         trajectory_descriptor_feature.reset()
-        other = [self.isInValid, self.isPure, self.target_label]
+        other = [self.isInValid, self.isPure, self.target_label, stops_rate]
+        other = other + tfe.get_list_of_features()
         distance = trajectory_descriptor_feature.describe(self.row_data.distance)
 
         trajectory_descriptor_feature.reset()
@@ -58,7 +62,10 @@ class TrajectoryDescriptor:
         trajectory_descriptor_feature.reset()
         brrate = trajectory_descriptor_feature.describe(self.row_data.brrate)
 
-        ret = distance + speed + acc + bearing + jerk + brate + brrate + other
+        trajectory_descriptor_feature.reset()
+        stop_time = trajectory_descriptor_feature.describe(stops)
+
+        ret = distance + speed + acc + bearing + jerk + brate + brrate + stop_time + other
 
         return ret
 
@@ -87,6 +94,7 @@ class TrajectoryDescriptor:
 
         brate_rate__features = np.array(['brate_rate_'] * len(features))
         brate_rate__features = map(''.join, zip(brate_rate__features, features))
+
 
         ret = map(''.join, zip(distance_features, speed_features, acc_features, bearing_features,
                                jerk_features, brate_features, brate_rate__features, other))
