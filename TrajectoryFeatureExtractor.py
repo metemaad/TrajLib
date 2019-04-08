@@ -7,11 +7,14 @@ from CBSmot import CBSmot
 
 class TrajectoryFeatureExtractor:
 
-    def __init__(self, data):
+    def __init__(self, **kwargs):
+        data = kwargs.get('trajectory', pd.DataFrame())
         data.sort_index(inplace=True)
         self.data = data
+        stop_parameters = kwargs.get('stop_parameters', [100, 60, 60, 100])
         cbsmote = CBSmot()
-        self.stops = cbsmote.find_stops(self.data, 100, 60, 60, 100, 100)
+        self.stops = cbsmote.find_stops(self.data, stop_parameters[0], stop_parameters[1], stop_parameters[2],
+                                        stop_parameters[3])
 
     def get_start_time(self):
         return self.data.index[0]

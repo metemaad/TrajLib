@@ -10,6 +10,7 @@ class TrajectoryDescriptor:
         self.isPure = False
         self.row_data = kwargs.get('trajectory', pd.DataFrame())
         self.labels = kwargs.get('labels', ['target'])
+        self.stop_parameters = kwargs.get('stop_parameters', [100, 60, 60, 100])
         if self.row_data.shape[0] == 0:
             self.isInValid = True
         self.purity_labels = self.purity()
@@ -19,8 +20,9 @@ class TrajectoryDescriptor:
         if len(self.purity_labels) == 1:
             return list(self.purity_labels.keys())[0]
         else:
+            print(self.row_data)
             sorted_dic = sorted(self.purity_labels, key=self.purity_labels.get, reverse=True)
-            return list(sorted_dic.keys())[0]
+            return list(sorted_dic.keys())[0]  #TODO descobrir erro
 
     def purity(self):
         label_dic = {}
@@ -34,7 +36,7 @@ class TrajectoryDescriptor:
 
     def describe(self):
         trajectory_descriptor_feature = tdf.TrajectoryDescriptorFeature()
-        tfe = TrajectoryFeatureExtractor(self.row_data)
+        tfe = TrajectoryFeatureExtractor(trajectory=self.row_data, stop_parameters=self.stop_parameters)
         stops = tfe.get_stop_times()
         stops_rate = 0 if len(stops) == 1 and stops[0] == 0 else len(stops)
 

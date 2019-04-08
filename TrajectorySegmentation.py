@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-
+from CBSmot import CBSmot
 
 # pd.options.mode.chained_assignment = 'raise'
 # pd.options.mode.chained_assignment = None
@@ -227,6 +227,22 @@ class TrajectorySegmentation:
         del t2
         del sec
         return segments, trajectorySegments
+
+    def segmentByStopMove(self, max_dist=100, min_time=60, time_tolerance=60, merge_tolerance=100):
+        cbsmote = CBSmot()
+        index, stops = cbsmote.segment_stops_moves(self.row_data, max_dist, min_time, time_tolerance, merge_tolerance)
+        index_move = []
+        moves = []
+        start = 0
+        for valor in index:
+            if valor[0] == self.row_data.index[start]:
+                start = self.row_data.index.get_loc(valor[1])+1
+                continue
+            end = self.row_data.index.get_loc(valor[0])-1
+            moves.append(self.row_data.loc[self.row_data.index[start]:self.row_data.index[end], :])
+            index_move.append([self.row_data.index[start], self.row_data.index[end]])
+            start = self.row_data.index.get_loc(valor[1])+1
+        return index+index_move, stops+moves
 
     def __del__(self):
         del self.row_data

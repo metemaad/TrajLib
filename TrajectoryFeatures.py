@@ -48,6 +48,7 @@ class TrajectoryFeatures:
         self.get_brrate(smooth=self.smooth_)  # 8
 
 
+
     def smoother(self, signal, n=100, a=1, level1=0, level2=0, plot=False):
         b = [1.0 / n] * n
         yy = lfilter(b, a, signal)
