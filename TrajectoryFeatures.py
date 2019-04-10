@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pywt as pywavelets
 from scipy.signal import lfilter
+import Distances as d
 
 
 def mad(a):
@@ -46,6 +47,8 @@ class TrajectoryFeatures:
 
         self.get_brrate(smooth=self.smooth_)  # 8
 
+
+
     def smoother(self, signal, n=100, a=1, level1=0, level2=0, plot=False):
         b = [1.0 / n] * n
         yy = lfilter(b, a, signal)
@@ -78,6 +81,7 @@ class TrajectoryFeatures:
         tmp1 = tmp.loc[tmp['td'] > 0, :]
         # avoid NaN in case rate of sampling is more than 1 per second
         self.row_data = tmp1
+        self.row_data.assign(timestamp=self.row_data.index)
         del tmp
         del tmp1
         return t
@@ -99,13 +103,7 @@ class TrajectoryFeatures:
     def get_distance(self, smooth=False):
         lat = self.row_data.lat.values
         lon = self.row_data.lon.values
-        lat2 = np.append(lat[1:], lat[-1:])
-        lon2 = np.append(lon[1:], lon[-1:])
-        # R = 3959.87433 # this is in miles.  For Earth radius in kilometers use 6372.8 km
-        r = 6372.8
-        d_lat, d_lon, lat1, lat2 = map(np.radians, (lat2 - lat, lon2 - lon, lat, lat2))
-        a = np.sin(d_lat / 2) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin(d_lon / 2) ** 2
-        distance_val = 2 * np.arcsin(np.sqrt(a)) * r * 1000  # convert to meter
+        distance_val = d.Distances.distance_array(lat, lon)
         # this is the distance difference between two points not the Total distance traveled
         if smooth:
             distance_val = self.smoother(distance_val)
@@ -200,3 +198,4 @@ class TrajectoryFeatures:
             brrate_val = self.smoother(brrate_val)
         self.row_data = self.row_data.assign(brrate=brrate_val)
         return brrate_val
+

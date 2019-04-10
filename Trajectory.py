@@ -14,6 +14,7 @@ class Trajectory:
         if kwargs['mood'] == 'csv':
             self.row_data = self.load_data(kwargs)
         self.rows_ = self.row_data.shape[0]
+        self.stop_parameters = kwargs.get('stop_parameters', [100, 60, 60, 100])
 
         self.has_alt = True
 
@@ -92,7 +93,8 @@ class Trajectory:
         # other = [self.isInValid, self.isPure, self.stat_label()]
 
         # return self.distance_features + self.speed_features + self.acc_features + self.bearing_features + self.jerk_features + self.brate_features + self.brate_rate_features + other
-        self.descriptor = TrajectoryDescriptor.TrajectoryDescriptor(trajectory=self.row_data, labels=self.labels)
+        self.descriptor = TrajectoryDescriptor.TrajectoryDescriptor(trajectory=self.row_data, labels=self.labels,
+                                                                    stop_parameters=self.stop_parameters)
         ret = self.descriptor.describe()
         return ret
 
@@ -351,6 +353,7 @@ class Trajectory:
 
         tf = TrajectoryFeatures.TrajectoryFeatures(trajectory=self.row_data, labels=self.labels, smooth=smooth_,
                                                    sgn=sgn_)
+
         self.row_data = tf.row_data
 
         return self.row_data

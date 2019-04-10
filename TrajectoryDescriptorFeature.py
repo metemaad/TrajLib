@@ -12,9 +12,8 @@ class TrajectoryDescriptorFeature:
         return 0
 
     def describe(self, trajectory_feature):
-        # print("processing..")
         self.min_ = np.min(trajectory_feature)
-        self.max_ = np.max(trajectory_feature)
+        self.max_ = np.max(trajectory_feature.values)
         self.mean = np.mean(trajectory_feature)
         self.median = np.median(trajectory_feature)
         self.std = np.std(trajectory_feature)
