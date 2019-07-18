@@ -27,7 +27,7 @@ for seg in range(len(trajectorySegments)):
         tr_obj=tr.Trajectory(mood='df',trajectory=trajectorySegments[seg],labels=['transportation_mode'])
         
         tr_obj.point_features() # generate point_features
-        f=tr_obj.trajectory_features()# generate trajectory_features
+        f=tr_obj.segment_features()# generate segment_features
         userid=tr_obj.return_row_data().iloc[0,:].t_user_id
 
         f.append(userid)

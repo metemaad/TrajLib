@@ -8,7 +8,7 @@ from CBSmot import CBSmot
 
 class TrajectorySegmentation:
     """
-    note that row_data input should be indexed by the timeDate of trajectory
+    note that raw_data input should be indexed by the timeDate of trajectory
     meanTime:
         is the indicator for split sequence of data to sub trajectories
         meanTime default is the mean of duration of the input trajectory
@@ -48,10 +48,10 @@ class TrajectorySegmentation:
         self.labels = labels
         # input data needs lat,lon,alt,time_date, [Labels]
         # ,nrows=80000
-        #self.row_data = self.row_data.drop_duplicates(time_date)
+        #self.raw_data = self.raw_data.drop_duplicates(time_date)
         self.row_data = pd.read_csv(src, sep=seperator, parse_dates=[time_date],index_col=time_date)
-        #self.row_data = self.row_data.drop_duplicates(['t_user_id',time_date])
-        #self.row_data.set_index(time_date)
+        #self.raw_data = self.raw_data.drop_duplicates(['t_user_id',time_date])
+        #self.raw_data.set_index(time_date)
 
         self.row_data.rename(columns={(lat): ('lat')}, inplace=True)
         self.row_data.rename(columns={(lon): ('lon')}, inplace=True)
@@ -59,11 +59,11 @@ class TrajectorySegmentation:
             self.row_data.rename(columns={(alt): ('alt')}, inplace=True)
             self.hasAlt = True
         self.row_data.rename(columns={(time_date): ('time_date')}, inplace=True)
-        #self.row_data = self.row_data.drop_duplicates(['t_user_id','time_date'])
-        #self.row_data = self.row_data.set_index('time_date')
+        #self.raw_data = self.raw_data.drop_duplicates(['t_user_id','time_date'])
+        #self.raw_data = self.raw_data.set_index('time_date')
 
         # sort data first
-        #self.row_data=self.row_data.sort_index()
+        #self.raw_data=self.raw_data.sort_index()
         self.row_data['day'] = self.row_data.index.date
 
         # preprocessing
@@ -127,7 +127,7 @@ class TrajectorySegmentation:
                                 sn.append([i[0] + start2, i[1] + start2])
                              #   print(j,i[0] + start2, i[1] + start2)
                                 j=j+1
-                                #subtrajectories[i] = self.row_data.iloc[i[0]:i[1], :]
+                                #subtrajectories[i] = self.raw_data.iloc[i[0]:i[1], :]
                             del f
                             del idx
                     else:

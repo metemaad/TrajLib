@@ -10,10 +10,10 @@ class Trajectory:
     def __init__(self, **kwargs):
         self.labels = kwargs.get('labels', ['target'])
         if kwargs['mood'] == 'df':
-            self.row_data = kwargs.get('trajectory', pd.DataFrame())
+            self.raw_data = kwargs.get('trajectory', pd.DataFrame())
         if kwargs['mood'] == 'csv':
-            self.row_data = self.load_data(kwargs)
-        self.rows_ = self.row_data.shape[0]
+            self.raw_data = self.load_data(kwargs)
+        self.rows_ = self.raw_data.shape[0]
         self.stop_parameters = kwargs.get('stop_parameters', [100, 60, 60, 100])
 
         self.has_alt = True
@@ -36,9 +36,9 @@ class Trajectory:
         # self.labels = []  # "label1:11"
         self.hasAlt = False  # False: we do not have altitude in dataset
 
-        # self.descriptor=TrajectoryDescriptor.TrajectoryDescriptor(trajectory=self.row_data, labels=self.labels)
+        # self.descriptor=TrajectoryDescriptor.TrajectoryDescriptor(trajectory=self.raw_data, labels=self.labels)
         #print("smothing..")
-        #self.row_data,noise=self.g_hample(self.row_data)
+        #self.raw_data,noise=self.g_hample(self.raw_data)
         #self.noise_no=len(noise)
 	#if self.noise_no>0 :
 	#   print("# noise points:",len(noise))
@@ -48,8 +48,8 @@ class Trajectory:
         return self.rows_
 
     def prediction_actual(self, target):
-        self.row_data.loc[:, target + '_prediction'] = self.stat_label()
-        return self.row_data.loc[:, [target, target + '_prediction']]
+        self.raw_data.loc[:, target + '_prediction'] = self.stat_label()
+        return self.raw_data.loc[:, [target, target + '_prediction']]
 
     def get_full_features_column_name(self):
         """
@@ -88,12 +88,12 @@ class Trajectory:
 """
         return self.descriptor.get_full_features_column_name()
 
-    def trajectory_features(self):
+    def segment_features(self):
 
         # other = [self.isInValid, self.isPure, self.stat_label()]
 
         # return self.distance_features + self.speed_features + self.acc_features + self.bearing_features + self.jerk_features + self.brate_features + self.brate_rate_features + other
-        self.descriptor = TrajectoryDescriptor.TrajectoryDescriptor(trajectory=self.row_data, labels=self.labels,
+        self.descriptor = TrajectoryDescriptor.TrajectoryDescriptor(trajectory=self.raw_data, labels=self.labels,
                                                                     stop_parameters=self.stop_parameters)
         ret = self.descriptor.describe()
         return ret
@@ -104,11 +104,11 @@ class Trajectory:
     lon: name of lon column in the dataframe
     alt: name of alt column in the dataframe
     timeDate: name of time date column in the dataframe
-    src: source of the csv file for row_data
+    src: source of the csv file for raw_data
     """
 
     def return_row_data(self):
-        return self.row_data
+        return self.raw_data
 
     def load_data(self, **kwargs):
         # lat='lat',lon='lon',alt='alt',timeDate='timeDate',labels=['label1'],src='~/gps_fe/bigdata2_8696/ex_traj/5428_walk_790.csv',seperator=','
@@ -131,49 +131,49 @@ class Trajectory:
 
         self.labels = labels
         # input data needs lat,lon,alt,timeDate, [Labels]
-        self.row_data = pd.read_csv(src, sep=separator, parse_dates=[time_date], index_col=time_date)
-        self.row_data.rename(columns={lat: 'lat'}, inplace=True)
-        self.row_data.rename(columns={lon: 'lon'}, inplace=True)
+        self.raw_data = pd.read_csv(src, sep=separator, parse_dates=[time_date], index_col=time_date)
+        self.raw_data.rename(columns={lat: 'lat'}, inplace=True)
+        self.raw_data.rename(columns={lon: 'lon'}, inplace=True)
         if alt is not None:
-            self.row_data.rename(columns={alt: 'alt'}, inplace=True)
-        self.row_data.rename(columns={time_date: 'timeDate'}, inplace=True)
+            self.raw_data.rename(columns={alt: 'alt'}, inplace=True)
+        self.raw_data.rename(columns={time_date: 'timeDate'}, inplace=True)
         # preprocessing
         # removing NaN in lat and lon
 
-        self.row_data = self.row_data.loc[pd.notnull(self.row_data.lat), :]
-        self.row_data = self.row_data.loc[pd.notnull(self.row_data.lon), :]
+        self.raw_data = self.raw_data.loc[pd.notnull(self.raw_data.lat), :]
+        self.raw_data = self.raw_data.loc[pd.notnull(self.raw_data.lon), :]
         for label in labels:
-            self.row_data = self.row_data.loc[pd.notnull(self.row_data[label]), :]
+            self.raw_data = self.raw_data.loc[pd.notnull(self.raw_data[label]), :]
 
         print('Data loaded.')
-        return self.row_data
+        return self.raw_data
 
     def load_data_frame(self, data_frame, labels=None):
         if labels is None:
             labels = ['target']
         self.labels = labels
-        self.row_data = data_frame
+        self.raw_data = data_frame
         # preprocessing
         self.pre_processing(labels)
 
-        if (self.row_data.shape[0] < 10):
+        if (self.raw_data.shape[0] < 10):
             return -1
         return 0
 
     def pre_processing(self, labels):
         # removing NaN in lat and lon
-        self.row_data = self.row_data.loc[pd.notnull(self.row_data.lat), :]
-        self.row_data = self.row_data.loc[pd.notnull(self.row_data.lon), :]
+        self.raw_data = self.raw_data.loc[pd.notnull(self.raw_data.lat), :]
+        self.raw_data = self.raw_data.loc[pd.notnull(self.raw_data.lon), :]
         for label in labels:
-            self.row_data = self.row_data.loc[pd.notnull(self.row_data[label]), :]
+            self.raw_data = self.raw_data.loc[pd.notnull(self.raw_data[label]), :]
         """
-        lat_= self.row_data.lat.rolling(3, min_periods=1).median()
-        self.row_data.assign(lat=lat_)
-        lon_ = self.row_data.lon.rolling(3, min_periods=1).median()
-        self.row_data.assign(lot=lon_)
+        lat_= self.raw_data.lat.rolling(3, min_periods=1).median()
+        self.raw_data.assign(lat=lat_)
+        lon_ = self.raw_data.lon.rolling(3, min_periods=1).median()
+        self.raw_data.assign(lot=lon_)
 
-        self.row_data = self.row_data.loc[pd.notnull(self.row_data.lat), :]
-        self.row_data = self.row_data.loc[pd.notnull(self.row_data.lon), :]
+        self.raw_data = self.raw_data.loc[pd.notnull(self.raw_data.lat), :]
+        self.raw_data = self.raw_data.loc[pd.notnull(self.raw_data.lon), :]
         """
 
         return None
@@ -333,15 +333,15 @@ class Trajectory:
 
     def discretization_by_records(self, n=11):
         # test again
-        idx = np.array(range(self.row_data.shape[0] - 1))
+        idx = np.array(range(self.raw_data.shape[0] - 1))
         f = idx[idx % n == 0]
         d = zip(f[:-1], f[1:])
         # test part
-        # if f[1:] != self.row_data.shape[0] - 1:
-        #    d.append((f[1:][0], self.row_data.shape[0]))
+        # if f[1:] != self.raw_data.shape[0] - 1:
+        #    d.append((f[1:][0], self.raw_data.shape[0]))
         subtrajectories = {}
         for i in d:
-            subtrajectories[i] = self.row_data.iloc[i[0]:i[1], :]
+            subtrajectories[i] = self.raw_data.iloc[i[0]:i[1], :]
         del f
         del idx
         #
@@ -351,15 +351,15 @@ class Trajectory:
     def point_features(self, smooth_=True, sgn_=False):
         smooth_ = False
 
-        tf = TrajectoryFeatures.TrajectoryFeatures(trajectory=self.row_data, labels=self.labels, smooth=smooth_,
+        tf = TrajectoryFeatures.TrajectoryFeatures(trajectory=self.raw_data, labels=self.labels, smooth=smooth_,
                                                    sgn=sgn_)
 
-        self.row_data = tf.row_data
+        self.raw_data = tf.row_data
 
-        return self.row_data
+        return self.raw_data
 
     def toCSV(self, filename):
-        self.row_data.to_csv(filename)
+        self.raw_data.to_csv(filename)
         return None
 
     def to_geojson(self):
@@ -371,20 +371,20 @@ class Trajectory:
         return None
 
     def load_trajectory_from_dataframe(self, df):
-        self.row_data = df.copy()
+        self.raw_data = df.copy()
 
     # 'collected_time','t_user_id','latitude','longitude','altitude'
     def load_trajectory_from_CSV(self, csvFile='~/gps_fe/bigdata2_8696/ex_traj/5428_walk_790.csv'):
 
-        self.row_data = pd.read_csv(csvFile, sep=',', parse_dates=['collected_time'], index_col='collected_time')
+        self.raw_data = pd.read_csv(csvFile, sep=',', parse_dates=['collected_time'], index_col='collected_time')
 
     def check_header(self):
-        if self.row_data.columns[0] == 'collected_time':
+        if self.raw_data.columns[0] == 'collected_time':
             # assert 'first column is collected time'
             print("d")
 
     def __del__(self):
-        del self.row_data
+        del self.raw_data
         # print 'clear memory'
 
     def g_hample(self,df, k=5, se=3, show_error_bound=False, plot=False, update=True, remove_noise=False):
